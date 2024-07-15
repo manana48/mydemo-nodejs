@@ -20,7 +20,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           username: manana48
-          password: dckr_pat_n_ub3SDTTfDbHhJ3JYnYApOupF8
+          password: ${{ DOCKERHUB_PASSWORD }}
       -
         name: Build and push
         uses: docker/build-push-action@v2 # build-push-action 사용
