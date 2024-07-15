@@ -27,6 +27,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: manana48/mydemo-repo:cache
+          tags: manana48/mydemo-repo:cache_v1
           cache-from: type=gha # 여기서 gha 는 Guthub Actions 용 캐시를 의미합니다.
           cache-to: type=gha,mode=max
