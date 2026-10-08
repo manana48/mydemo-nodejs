@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production # Required reviewers 설정 시 승인 후 실행
     env:
-      FULL_CONTAINER_IMAGE: ${{ env.ECR_REPOSITORY_URI }}:${{ needs.build-and-push-to-ecr.outputs.image_tag }}
+      IMAGE_TAG: ${{ needs.build-and-push-to-ecr.outputs.image_tag }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
     steps:
       - name: Configure AWS credentials
@@ -61,6 +61,7 @@ jobs:
       - name: Prepare deploy commands
         run: |
           REGISTRY="${ECR_REPOSITORY_URI%%/*}"
+          FULL_CONTAINER_IMAGE="${ECR_REPOSITORY_URI}:${IMAGE_TAG}"
           jq -n \
             --arg region "$AWS_REGION" \
             --arg registry "$REGISTRY" \
