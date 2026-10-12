@@ -72,6 +72,7 @@ jobs:
               "set -e",
               "aws ecr get-login-password --region \($region) | docker login --username AWS --password-stdin \($registry)",
               "docker pull \($image)",
+              "sleep 30",
               "docker stop \($name) || true",
               "docker rm \($name) || true",
               "docker run -d --name \($name) --restart unless-stopped -p 80:8080 \($image)"
