@@ -37,12 +37,17 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push image
-        env:
-          FULL_CONTAINER_IMAGE: ${{ env.ECR_REPOSITORY_URI }}:${{ steps.meta.outputs.tag }}
-        run: |
-          docker build -t "$FULL_CONTAINER_IMAGE" .
-          docker push "$FULL_CONTAINER_IMAGE"
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.ECR_REPOSITORY_URI }}:${{ steps.meta.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy-to-ec2:
     needs: build-and-push-to-ecr
