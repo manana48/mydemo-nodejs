@@ -46,8 +46,7 @@ jobs:
 
   deploy-to-ec2:
     needs: build-and-push-to-ecr
-    if: >-
-      !cancelled() &&
+    if:
       (github.event_name == 'workflow_dispatch' || vars.DEPLOY_FREEZE != 'true')
     runs-on: ubuntu-latest
     environment: production # Required reviewers 설정 시 승인 후 실행
@@ -78,7 +77,6 @@ jobs:
               "set -e",
               "aws ecr get-login-password --region \($region) | docker login --username AWS --password-stdin \($registry)",
               "docker pull \($image)",
-              "sleep 30",
               "docker stop \($name) || true",
               "docker rm \($name) || true",
               "docker run -d --name \($name) --restart unless-stopped -p 80:8080 \($image)"
