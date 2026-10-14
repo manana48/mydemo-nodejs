@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      audit_mode:
+        description: "npm audit 실패 시 동작 (enforce: 배포 차단 / warn: 경고만 남기고 진행)"
+        type: choice
+        options: [enforce, warn]
+        default: enforce
 
 env:
   AWS_REGION: ap-northeast-2
@@ -43,8 +49,29 @@ jobs:
         with:
           node-version: 16
 
+      # 우선순위: 수동 실행 입력값 > 저장소 변수 AUDIT_MODE > enforce
       - name: Dependency audit
-        run: npm audit --omit=dev --audit-level=high
+        env:
+          AUDIT_MODE: ${{ inputs.audit_mode || vars.AUDIT_MODE || 'enforce' }}
+        run: |
+          set +e
+          REPORT=$(npm audit --omit=dev --audit-level=high)
+          RC=$?
+          set -e
+          echo "$REPORT"
+          [ "$RC" -eq 0 ] && exit 0
+
+          if [ "$AUDIT_MODE" = "warn" ]; then
+            echo "::warning title=npm audit 우회::high 이상 취약점이 있지만 warn 모드로 배포를 계속 진행합니다"
+            {
+              echo "## ⚠️ npm audit 우회 (AUDIT_MODE=warn)"
+              echo '```'
+              echo "$REPORT" | tail -n 30
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$RC"
 
   build-and-push-to-ecr:
     needs: code-analysis
