@@ -15,7 +15,39 @@ permissions:
   contents: read
 
 jobs:
+  # 소스 코드 정적 분석 (CodeQL) + 의존성 취약점 검사 (npm audit)
+  code-analysis:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write # CodeQL 결과를 Security 탭에 업로드
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=high
+
   build-and-push-to-ecr:
+    needs: code-analysis
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.tag }}
